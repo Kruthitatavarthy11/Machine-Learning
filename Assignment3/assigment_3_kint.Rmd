@@ -1,0 +1,99 @@
+---
+title: "Assignment_3"
+author: "Kruthi  Tatavarthy"
+date: "3/6/2022"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r bank_data_assign3}
+summary(bank_data_assign3)
+library("readr")
+library("caret")
+library("dplyr")
+library("tidyr")
+library("reshape2")
+library("e1071")
+
+#Import Universalbank.csv file from local 
+bank_data_assign3 <- read.csv("C:/Users/Kruthi Tatavarthy/Documents/Masters in Business Analytics/Sem-1/Machine Learning/UniversalBank.csv")
+head(bank_data_assign3)
+
+bank_data_assign3$Personal.Loan <- as.factor(bank_data_assign3$Personal.Loan)
+bank_data_assign3$Online <- as.factor(bank_data_assign3$Online)
+bank_data_assign3$CreditCard <- as.factor(bank_data_assign3$CreditCard)
+
+#Setting Seed
+set.seed(2022)
+
+training_data_index = createDataPartition(bank_data_assign3$Personal.Loan, p=.6, list = F) #60% training data
+training_data_df = bank_data_assign3[training_data_index,]
+validation_data_df = bank_data_assign3[-training_data_index,] #Validation Data
+
+#Question 1: 
+
+melt_bank_data_assign3 = melt(training_data_df, id=c("CreditCard","Personal.Loan"), variable = "Online") #function melt() 
+dcast_bank_data_assign3 = dcast(melt_bank_data_assign3, CreditCard+Personal.Loan~Online) #function cast()
+dcast_bank_data_assign3[,c(1:2,14)] # CreditCard, Personal.Loan, Online DF
+
+#Question 2:
+
+#Answer: the probability of customer accepingt the loan is calculated as 93/3000=3.1% 
+
+#Question 3: 
+
+loan_melt_bank_data_assign3 = melt(training_data_df, id=c("Personal.Loan"), variable = "Online")
+cc_melt_bank_data_assign3 = melt(training_data_df, id=c("CreditCard"), variable = "Online")
+dcast_loan_bank_data_assign3 = dcast(loan_melt_bank_data_assign3, Personal.Loan~Online)
+dcast_cc_bank_data_assign3 = dcast(cc_melt_bank_data_assign3, CreditCard~Online)
+
+dcast_loan_bank_data_assign3[,c(1,13)]
+dcast_cc_bank_data_assign3[,c(1,14)]
+
+#Question 4
+
+#1. P(CC = 1 | Loan = 1) (the proportion of credit card holders among the loan acceptors)
+#calculation: 93/(93+195) is eqiual to 32.29%
+table(training_data_df[,c(14,10)])
+
+#2. P(Online = 1 | Loan = 1)  
+#Calculation: 179/(179+109) is equal to 62.15%
+table(training_data_df[,c(13,10)])
+
+#3. P(Loan = 1) (the proportion of loan acceptors) 
+#Calculation: 288/(288+2712) is equal to 9.6%
+table(training_data_df[c(10)])
+
+#4. P(CC = 1 | Loan = 0)  
+#Calculation: 788/(788+1924) is equal to 29% 
+
+#5. P(Online = 1 | Loan = 0)
+#Calculation: 1631/(1631+1081) = 60%
+
+#6. P(Loan = 0)
+#Calculation: 2712/(2712+288) = 90.4% 
+
+#Question 5
+
+#Calculation: ((93/(93+195))* (179/(179+109))* (288/(288+2712)))/((93/(93+195))* (179/(179+109))* (288/(288+2712))) + ((788/(788+1924)) * (1631/(1631+1081)) * (2712/(2712+288))) = 0.1087106
+
+#Question 6: 
+
+#Answer: 0.1 which is approximately same as the calculation in answer 5.
+#Independent variable were needed for the calculated method in this answer mainly to predict, 
+#But, we don't need the independent varialbles for Naive Bayes.
+
+#Question 7: 
+
+train_naive_bayes = training_data_df[,c(10,13:14)]
+naive_bayes = naiveBayes(Personal.Loan~., data=train_naive_bayes)
+naive_bayes
+  
+
