@@ -1,0 +1,132 @@
+---
+title: "Assignment_5"
+author: "Kruthi  Tatavarthy"
+date: "4/17/2022"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r}
+#loading all the required libraries
+library(factoextra)
+library(dendextend)
+library(cluster)
+library(tidyverse)
+library(knitr)
+```
+
+#Import Data 
+```{r}
+cereals<- read.csv('C:/Users/Kruthi Tatavarthy/Desktop/Machine-Learning/Assignment 5/Cereals.csv')
+numericaldata = data.frame(cereals[,4:16])
+```
+#1. Apply hierarchical clustering to the data using Euclidean distance to the normalized measurements. Use Agnes to compare the clustering from single linkage, complete linkage, average linkage, and Ward. Choose the best method.
+
+
+#omitting all the missing values present in the data
+```{r}
+OmitMissing = na.omit(numericaldata)
+
+```
+
+#normalizing and scaling the data
+```{r}
+Normalise = scale(OmitMissing)
+```
+
+#measuring the distance using the euclidian distance and computing the dissimilarity matrix
+```{r}
+distance = dist(Normalise, method = "euclidian")
+```
+
+#performing hierarchial clustering using complete linkage and representing in plot
+```{r}
+clustering_heirarchial = hclust(distance,method = "complete")
+plot(clustering_heirarchial)
+```
+
+#rounding off the decimals
+```{r}
+round(clustering_heirarchial$height, 3)
+```
+
+#determining the optimla clusters and highlighting with colours
+```{r}
+plot(clustering_heirarchial)
+rect.hclust(clustering_heirarchial,k = 4, border = "red")
+```
+
+#performing clustering using AGNES
+```{r}
+singleCH = agnes(Normalise, method = "single")
+completeCH = agnes(Normalise, method = "complete")
+averageCH = agnes(Normalise, method = "average")
+wardCH = agnes(Normalise, method = "ward")
+```
+
+
+#comparing the agglomerative cosfficients of single , complete, average, ward
+```{r}
+print(singleCH$ac)
+print(completeCH$ac)
+print(averageCH$ac)
+print(wardCH$ac)
+
+pltree(wardCH, cex = 0.6, hang = -1, main = "Dendrogram of agnes-Ward")
+```
+#according to the above values, wards method is the best with the value of 0.904.plotting ward using agnes and the dendogram
+
+
+
+#using the ward method for hierarchial clustering
+```{r}
+
+HCuster1 <- hclust(distance, method = "ward.D2" )
+subgrp <- cutree(HCuster1, k = 4)
+table(subgrp)
+cereals <- as.data.frame(cbind(Normalise,subgrp))
+```
+
+
+
+#visualising the results on scatterplot
+```{r}
+fviz_cluster(list(data = Normalise, cluster = subgrp))
+```
+
+#selecting the best breakfast cereal cluster with high protein, fibre and low in sugar and sodium.
+#choosing the healthy cereal cluster
+```{r}
+Newcereals = numericaldata
+Newcereals_omit = na.omit(Newcereals)
+Clust = cbind(Newcereals_omit, subgrp)
+Clust[Clust$subgrp==1,]
+```
+
+```{r}
+Clust[Clust$subgrp==2,]
+```
+
+
+```{r}
+Clust[Clust$subgrp==3,]
+```
+
+
+```{r}
+Clust[Clust$subgrp==4,]
+```
+
+#here we calculate the mean rating in order determine the healthy cluster cereals
+```{r}
+
+mean(Clust[Clust$subgrp==1,"rating"])
+mean(Clust[Clust$subgrp==2,"rating"])
+mean(Clust[Clust$subgrp==3,"rating"])
+mean(Clust[Clust$subgrp==4,"rating"])
+```
+
+#From the above results it is clearly evident that mean rating is highest for subgroup 1.
+#so, it is recommended to choose subgrp 1 as the healthy diet cluster.
